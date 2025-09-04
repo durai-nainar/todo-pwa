@@ -46,12 +46,8 @@ todo-pwa/
 ---
 
 ## 🌐 Live Demo
-👉 [Deployed on Netlify](https://your-site-name.netlify.app)  
+👉 [Deployed on Vercel](https://your-site-name.netlify.app)  
 
----
-
-## 📸 Screenshots
-(Add screenshots of your app here after deployment)
 
 ---
 
