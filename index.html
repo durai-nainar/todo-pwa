@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Todo — Fast & Minimal</title>
+  <meta name="theme-color" content="#7b68ee" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="icons/icon-64.png" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <meta name="description" content="A fast, offline-ready To‑Do app with filters, drag & drop, and local sync." />
+  <style>
+    :root {
+      --bg: #0f1226;
+      --card: #161a36;
+      --muted: #8d92b3;
+      --text: #eef0ff;
+      --accent: #7b68ee;
+      --accent-2: #9f91ff;
+      --danger: #ff6b6b;
+      --ok: #2dd4bf;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius: 16px;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font: 16px/1.35 system-ui, -apple-system, Segoe UI, Roboto, Arial, Helvetica, "Apple Color Emoji", "Segoe UI Emoji";
+      color: var(--text);
+      background: radial-gradient(1200px 800px at 80% -10%, #2b2c5a33, transparent) ,
+                  radial-gradient(600px 600px at 10% 110%, #1a1c3a55, transparent) ,
+                  var(--bg);
+    }
+    .container {
+      max-width: 900px;
+      margin: 28px auto 60px;
+      padding: 0 16px;
+    }
+    header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+    .logo {
+      width: 44px; height: 44px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      display: grid; place-items: center;
+      box-shadow: var(--shadow);
+    }
+    .logo svg { width: 24px; height: 24px; color: white; }
+    h1 {
+      margin: 0;
+      font-size: 28px;
+      letter-spacing: .2px;
+    }
+    .subtitle { color: var(--muted); font-size: 14px; margin-top: 2px; }
+
+    .card {
+      background: linear-gradient(140deg, #151736 0%, #12142e 100%);
+      border: 1px solid #2a2e5a;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+    .row { display: flex; gap: 12px; flex-wrap: wrap; }
+    .controls {
+      display: grid;
+      grid-template-columns: 1fr auto auto auto;
+      gap: 10px;
+      padding: 14px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      backdrop-filter: blur(6px);
+    }
+    input, select, button, textarea {
+      background: #0f1230;
+      border: 1px solid #2a2e5a;
+      color: var(--text);
+      padding: 10px 12px;
+      border-radius: 10px;
+      outline: none;
+    }
+    input:focus, select:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px #7b68ee33; }
+    button {
+      cursor: pointer;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      border: none;
+      font-weight: 600;
+    }
+    button.ghost {
+      background: transparent;
+      border: 1px solid #2a2e5a;
+    }
+    button.danger { background: linear-gradient(135deg, #ff6b6b, #f43f5e); }
+
+    .list { padding: 8px; }
+    .empty {
+      padding: 28px;
+      text-align: center;
+      color: var(--muted);
+    }
+    .todo {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 12px;
+      align-items: start;
+      padding: 12px;
+      margin: 10px 6px;
+      background: #0f1230;
+      border: 1px solid #2a2e5a;
+      border-radius: 12px;
+      transition: transform .12s ease, background .2s ease, border-color .2s ease;
+    }
+    .todo.dragging { opacity: .7; transform: scale(.98); }
+    .todo:hover { border-color: var(--accent-2); }
+    .todo.completed { opacity: .7; }
+    .todo .title {
+      font-weight: 600;
+      margin-bottom: 6px;
+      word-break: break-word;
+    }
+    .todo .meta {
+      display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+      font-size: 12px; color: var(--muted);
+    }
+    .badge {
+      padding: 4px 8px;
+      background: #1a1d44;
+      border: 1px solid #2a2e5a;
+      border-radius: 999px;
+    }
+    .prio-High { color: #ffb4b4; border-color: #ffb4b4aa; }
+    .prio-Medium { color: #ffe8a3; border-color: #ffe8a399; }
+    .prio-Low { color: #b8ffd9; border-color: #b8ffd980; }
+
+    .todo textarea {
+      width: 100%;
+      min-height: 24px;
+      background: transparent;
+      border: none;
+      resize: vertical;
+      color: var(--muted);
+      padding: 0;
+    }
+    .actions { display: flex; gap: 8px; }
+    .actions button { padding: 8px 10px; }
+    .filters {
+      display: flex; gap: 8px; flex-wrap: wrap;
+      padding: 10px 14px 2px;
+    }
+    .filters > * { font-size: 14px; }
+    .statusbar {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 10px 14px 14px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .kbd { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; padding: 2px 6px; border: 1px solid #2a2e5a; border-radius: 6px; color: var(--text); }
+    .footnote { color: var(--muted); font-size: 12px; text-align: center; margin-top: 12px; }
+    @media (max-width: 640px) {
+      .controls { grid-template-columns: 1fr auto auto; }
+      .hide-sm { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 6L9 17l-5-5"/>
+        </svg>
+      </div>
+      <div>
+        <h1>To‑Do</h1>
+        <div class="subtitle">Fast. Minimal. Offline‑ready.</div>
+      </div>
+    </header>
+
+    <section class="card">
+      <div class="controls">
+        <input id="newTitle" placeholder="What needs to be done?" autofocus />
+        <input id="newDue" type="date" class="hide-sm" />
+        <select id="newPrio" aria-label="Priority">
+          <option>Medium</option>
+          <option>High</option>
+          <option>Low</option>
+        </select>
+        <button id="addBtn" title="Add task (Enter)">Add</button>
+      </div>
+
+      <div class="filters">
+        <input id="search" placeholder="Search…" />
+        <select id="filterState">
+          <option value="all">All</option>
+          <option value="active">Active</option>
+          <option value="completed">Completed</option>
+          <option value="today">Due Today</option>
+          <option value="overdue">Overdue</option>
+        </select>
+        <select id="sortBy">
+          <option value="created">Sort: Created</option>
+          <option value="due">Sort: Due Date</option>
+          <option value="prio">Sort: Priority</option>
+          <option value="alpha">Sort: A→Z</option>
+        </select>
+        <button id="clearDone" class="ghost">Clear completed</button>
+      </div>
+
+      <div id="list" class="list" aria-live="polite"></div>
+
+      <div class="statusbar">
+        <div id="counts">0 items</div>
+        <div>
+          <span class="kbd">Enter</span> add
+          <span class="kbd">E</span> edit
+          <span class="kbd">Space</span> done
+          <span class="kbd">Del</span> remove
+        </div>
+      </div>
+    </section>
+
+    <div class="footnote">Data is stored locally on this device.</div>
+  </div>
+
+  <script type="module" src="app.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js').catch(()=>{});
+    }
+  </script>
+</body>
+</html>
